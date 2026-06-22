@@ -90,20 +90,26 @@ def process_notification(notification):
     send_message(chat_id, reply)
 
 def run():
+    
     log.info("🚀 %s is starting...", BOT_NAME)
     while True:
-        notification = receive_notification()
-        if not notification:
-            time.sleep(2)
-            continue
-        receipt_id = notification.get("receiptId")
         try:
-            process_notification(notification)
+            notification = receive_notification()
+            if not notification:
+                time.sleep(2)
+                continue
+            receipt_id = notification.get("receiptId")
+            log.info("📬 Got notification: %s", str(notification)[:200])
+            try:
+                process_notification(notification)
+            except Exception as e:
+                log.exception("Error: %s", e)
+            finally:
+                if receipt_id:
+                    delete_notification(receipt_id)
         except Exception as e:
-            log.exception("Error: %s", e)
-        finally:
-            if receipt_id:
-                delete_notification(receipt_id)
+            log.error("Loop error: %s", e)
+            time.sleep(5)
 
 if __name__ == "__main__":
     run()
